@@ -248,12 +248,6 @@ def load_smiles(
     if not compound:
         compound = mb.Compound()
 
-    #smile strings can exceed the OS filename length
-    try:
-        test_path = Path(smiles_or_filename)
-    except (OSError, IOError):
-        test_path = smiles_or_filename
-
     # Will try to support list of smiles strings in the future
     if backend is None:
         backend = "rdkit"
