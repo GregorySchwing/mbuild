@@ -263,7 +263,9 @@ def load_smiles(
         from rdkit import Chem
         from rdkit.Chem import AllChem
         # First we try treating filename_or_object as a filename
+        # smile strings can exceed the OS filename length
         try:
+          test_path = Path(smiles_or_filename)
           if test_path.exists():
               # assuming this is a smi file now
               mymol = Chem.SmilesMolSupplier(smiles_or_filename)
@@ -282,7 +284,7 @@ def load_smiles(
                       f"string is not supported, using {Chem.MolToSmiles(rdmol)}"
                   )
               mymol = pybel.readstring("smi", smiles_or_filename)
-        # Now we treat it as a filename
+        # Now we treat it as a smile string
         except (OSError, IOError):
             rdmol = Chem.MolFromSmiles(smiles_or_filename)
 
