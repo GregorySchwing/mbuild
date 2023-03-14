@@ -248,7 +248,11 @@ def load_smiles(
     if not compound:
         compound = mb.Compound()
 
-    test_path = Path(smiles_or_filename)
+    #smile strings can exceed the OS filename length
+    try:
+        test_path = Path(smiles_or_filename)
+    except:
+        test_path = smiles_or_filename
 
     # Will try to support list of smiles strings in the future
     if backend is None:
@@ -258,25 +262,28 @@ def load_smiles(
         rdkit = import_("rdkit")
         from rdkit import Chem
         from rdkit.Chem import AllChem
-
-        if test_path.exists():
-            # assuming this is a smi file now
-            mymol = Chem.SmilesMolSupplier(smiles_or_filename)
-            if not mymol:
-                raise ValueError(
-                    "Provided smiles string or file was invalid. Refer to the "
-                    "above RDKit error messages for additional information."
-                )
-            mol_list = [mol for mol in mymol]
-            if len(mol_list) == 1:
-                rdmol = mymol[0]
-            else:
-                rdmol = mymol[0]
-                warn(
-                    "More than one SMILES string in file, more than one SMILES "
-                    f"string is not supported, using {Chem.MolToSmiles(rdmol)}"
-                )
-        else:
+        # First we try treating filename_or_object as a filename
+        try:
+          if test_path.exists():
+              # assuming this is a smi file now
+              mymol = Chem.SmilesMolSupplier(smiles_or_filename)
+              if not mymol:
+                  raise ValueError(
+                      "Provided smiles string or file was invalid. Refer to the "
+                      "above RDKit error messages for additional information."
+                  )
+              mol_list = [mol for mol in mymol]
+              if len(mol_list) == 1:
+                  rdmol = mymol[0]
+              else:
+                  rdmol = mymol[0]
+                  warn(
+                      "More than one SMILES string in file, more than one SMILES "
+                      f"string is not supported, using {Chem.MolToSmiles(rdmol)}"
+                  )
+              mymol = pybel.readstring("smi", smiles_or_filename)
+        # Now we treat it as a filename
+        except (OSError, IOError):
             rdmol = Chem.MolFromSmiles(smiles_or_filename)
 
         seed = kwargs.get("smiles_seed", 0)
